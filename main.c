@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <plot.h>
+#include "bstr.h" 
 
 static plPlotter *plotter;
 
@@ -11,13 +12,13 @@ void usage(const char *);
 #define POINTING_RIGHT	0
 #define POINTING_LEFT	1
 
-#define JOINT_MODE_SYMM_STARTWI	0
-#define JOINT_MODE_SYMM_STARTWO	1
-#define JOINT_MODE_CLOSED	2
-#define JOINT_MODE_OPEN		3
+#define MODE_BOX_SYMM	0
+#define MODE_BOX_CLOSED	1
 
 int drawfingers_sym_startwi(int, int, int, int, int, int);
 int drawfingers_sym_startwo(int, int, int, int, int, int);
+int drawfingers_closed(int, int, int, int, int, int);
+int drawfingers_open(int, int, int, int, int, int);
 
 #define BEFORE_LEN	500
 #define GAP_LEN		200
@@ -28,18 +29,30 @@ main(int argc, char **argv)
 	int	matwidth;
 	int	matthick;
 	int	fingercnt;
-	int	fingerlen;
+	int	mode;
 
 	plPlotterParams *plotter_params;
 
-	if(argc != 4) {
+	if(argc != 5) {
 		usage(argv[0]);
 		exit(-1);
 	}
 
-	matwidth = atoi(argv[1]) * 10;
-	matthick = atoi(argv[2]) * 10;
-	fingercnt = atoi(argv[3]);
+	mode = MODE_BOX_SYMM;
+
+	if(!xstrcmp(argv[1], "box_symm"))
+		mode = MODE_BOX_SYMM;
+	else
+	if(!xstrcmp(argv[1], "box_closed"))
+		mode = MODE_BOX_CLOSED;
+	else {
+		fprintf(stderr, "Invalid mode specified.\n");
+		exit(-1);
+	}
+
+	matwidth = atoi(argv[2]) * 10;
+	matthick = atoi(argv[3]) * 10;
+	fingercnt = atoi(argv[4]);
 
 	if(matwidth == 0) {
 		fprintf(stderr, "Invalid material width specified.\n");
@@ -73,14 +86,22 @@ main(int argc, char **argv)
 
 
 
-	fingerlen = matwidth / (fingercnt * 2);
+	if(mode == MODE_BOX_SYMM) {
 
-	(void) drawfingers_sym_startwo(0, 0, POINTING_RIGHT, fingercnt,
-	    fingerlen, matthick);
+		(void) drawfingers_sym_startwi(0, 0, POINTING_RIGHT, fingercnt,
+		    matwidth, matthick);
+		(void) drawfingers_sym_startwo(BEFORE_LEN + matthick + GAP_LEN,
+		    0, POINTING_LEFT, fingercnt, matwidth, matthick);
 
-	(void) drawfingers_sym_startwo(BEFORE_LEN + matthick + GAP_LEN, 0,	
-	    POINTING_LEFT, fingercnt, fingerlen, matthick);
+	} else
+	if(mode == MODE_BOX_CLOSED) {
 
+		(void) drawfingers_open(0, 0, POINTING_RIGHT, fingercnt,
+		    matwidth, matthick);
+		(void) drawfingers_closed(BEFORE_LEN + matthick + GAP_LEN, 0,	
+		    POINTING_LEFT, fingercnt, matwidth, matthick);
+
+	}
 
 
 	pl_closepl_r (plotter);               /* end page of graphics */
@@ -94,16 +115,20 @@ main(int argc, char **argv)
 void
 usage(const char *execn)
 {
-	printf("Usage: %s <material_width_mm> <material_thickness_mm>"
-	    " <finger_count>\n", execn);
+	printf("Usage: %s <type> <material_width_mm> <material_thickness_mm>"
+	    " <finger_count>\n\n", execn);
+	printf("Supported types are: box_symm, box_closed\n");
 }
 
 
 int
-drawfingers_sym_startwi(int x, int y, int dir, int fingercnt, int fingerlen,
+drawfingers_sym_startwi(int x, int y, int dir, int fingercnt, int matwidth,
 	int matthick)
 {
 	int	i;
+	double	fingerlen;
+
+	fingerlen = (double) matwidth / (fingercnt * 2);
 
 	if(dir == POINTING_RIGHT) {
 		pl_line_r(plotter,
@@ -113,35 +138,35 @@ drawfingers_sym_startwi(int x, int y, int dir, int fingercnt, int fingerlen,
 		    y);
 		pl_line_r(plotter,
 		    x,
-		    y + fingercnt * 2 * fingerlen,
+		    y + matwidth,
 		    x + BEFORE_LEN,
-		    y + fingercnt * 2 * fingerlen);
+		    y + matwidth);
 
 		for(i = 0; i < fingercnt; ++i) {
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN,
-			    y + (i * 2 * fingerlen),
+			    (double) y + (i * 2 * fingerlen),
 			    x + BEFORE_LEN + matthick,
-			    y + (i * 2 * fingerlen));
+			    (double) y + (i * 2 * fingerlen));
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN + matthick,
-			    y + (i * 2 * fingerlen),
+			    (double) y + (i * 2 * fingerlen),
 			    x + BEFORE_LEN + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen);
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + BEFORE_LEN,
-			    y + (i * 2 * fingerlen) + fingerlen);
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN,
-			    y + (i * 2 * fingerlen) + fingerlen,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + BEFORE_LEN,
-			    y + (i * 2 * fingerlen) + fingerlen * 2);
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
 		}
 
 	} else { /* POINTING_LEFT */
@@ -153,36 +178,36 @@ drawfingers_sym_startwi(int x, int y, int dir, int fingercnt, int fingerlen,
 		    y);
 		pl_line_r(plotter,
 		    x + matthick,
-		    y + fingercnt * 2 * fingerlen,
+		    y + matwidth,
 		    x + matthick + BEFORE_LEN,
-		    y + fingercnt * 2 * fingerlen);
+		    y + matwidth);
 
 
 		for(i = 0; i < fingercnt; ++i) {
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + matthick,
-			    y + (i * 2 * fingerlen),
+			    (double) y + (i * 2 * fingerlen),
 			    x,
-			    y + (i * 2 * fingerlen));
+			    (double) y + (i * 2 * fingerlen));
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x,
-			    y + (i * 2 * fingerlen),
+			    (double) y + (i * 2 * fingerlen),
 			    x,
-			    y + (i * 2 * fingerlen) + fingerlen);
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x,
-			    y + (i * 2 * fingerlen) + fingerlen,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen);
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen * 2);
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
 		}
 	}
 
@@ -191,10 +216,13 @@ drawfingers_sym_startwi(int x, int y, int dir, int fingercnt, int fingerlen,
 
 
 int
-drawfingers_sym_startwo(int x, int y, int dir, int fingercnt, int fingerlen,
+drawfingers_sym_startwo(int x, int y, int dir, int fingercnt, int matwidth,
 	int matthick)
 {
 	int	i;
+	double	fingerlen;
+
+	fingerlen = (double) matwidth / (fingercnt * 2);
 
 	if(dir == POINTING_RIGHT) {
 		pl_line_r(plotter,
@@ -204,35 +232,35 @@ drawfingers_sym_startwo(int x, int y, int dir, int fingercnt, int fingerlen,
 		    y);
 		pl_line_r(plotter,
 		    x,
-		    y + fingercnt * 2 * fingerlen,
+		    y + matwidth,
 		    x + BEFORE_LEN,
-		    y + fingercnt * 2 * fingerlen);
+		    y + matwidth);
 
 		for(i = 0; i < fingercnt; ++i) {
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN,
-			    y + (i * 2 * fingerlen),
+			    (double) y + (i * 2 * fingerlen),
 			    x + BEFORE_LEN,
-			    y + (i * 2 * fingerlen) + fingerlen);
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN,
-			    y + (i * 2 * fingerlen) + fingerlen,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + BEFORE_LEN + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen);
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + BEFORE_LEN + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen * 2);
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen * 2,
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2,
 			    x + BEFORE_LEN,
-			    y + (i * 2 * fingerlen) + fingerlen * 2);
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
 		}
 
 	} else { /* POINTING_LEFT */
@@ -244,39 +272,240 @@ drawfingers_sym_startwo(int x, int y, int dir, int fingercnt, int fingerlen,
 		    y);
 		pl_line_r(plotter,
 		    x + matthick,
-		    y + fingercnt * 2 * fingerlen,
+		    y + matwidth,
 		    x + matthick + BEFORE_LEN,
-		    y + fingercnt * 2 * fingerlen);
+		    y + matwidth);
 
 
 		for(i = 0; i < fingercnt; ++i) {
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + matthick,
-			    y + (i * 2 * fingerlen),
+			    (double) y + (i * 2 * fingerlen),
 			    x + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen);
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x,
-			    y + (i * 2 * fingerlen) + fingerlen);
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x,
-			    y + (i * 2 * fingerlen) + fingerlen,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x,
-			    y + (i * 2 * fingerlen) + fingerlen * 2);
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x,
-			    y + (i * 2 * fingerlen) + fingerlen * 2,
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2,
 			    x + matthick,
-			    y + (i * 2 * fingerlen) + fingerlen * 2);
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
 		}
 	}
 
 	return 0;
 }
+
+
+int
+drawfingers_closed(int x, int y, int dir, int fingercnt, int matwidth,
+	int matthick)
+{
+	int	i;
+	double	fingerlen;
+
+	fingerlen = (double) matwidth / (fingercnt * 2 + 1);
+
+	if(dir == POINTING_RIGHT) {
+		pl_line_r(plotter,
+		    x,
+		    y,
+		    x + BEFORE_LEN,
+		    y);
+		pl_line_r(plotter,
+		    x,
+		    y + matwidth,
+		    x + BEFORE_LEN,
+		    y + matwidth);
+
+		for(i = 0; i < fingercnt + 1; ++i) {
+
+			pl_line_r(plotter,
+			    x + BEFORE_LEN,
+			    (double) y + (i * 2 * fingerlen),
+			    x + BEFORE_LEN + matthick,
+			    (double) y + (i * 2 * fingerlen));
+
+			pl_line_r(plotter,
+			    x + BEFORE_LEN + matthick,
+			    (double) y + (i * 2 * fingerlen),
+			    x + BEFORE_LEN + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
+
+			pl_line_r(plotter,
+			    x + BEFORE_LEN + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
+			    x + BEFORE_LEN,
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
+
+			if(i >= fingercnt) {
+			 	break;
+			}
+
+			pl_line_r(plotter,
+			    x + BEFORE_LEN,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
+			    x + BEFORE_LEN,
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
+		}
+
+	} else { /* POINTING_LEFT */
+
+		pl_line_r(plotter,
+		    x + matthick,
+		    y,
+		    x + matthick + BEFORE_LEN,
+		    y);
+		pl_line_r(plotter,
+		    x + matthick,
+		    y + matwidth,
+		    x + matthick + BEFORE_LEN,
+		    y + matwidth);
+
+
+		for(i = 0; i < fingercnt + 1; ++i) {
+
+			pl_line_r(plotter,
+			    x + matthick,
+			    (double) y + (i * 2 * fingerlen),
+			    x,
+			    (double) y + (i * 2 * fingerlen));
+
+			pl_line_r(plotter,
+			    x,
+			    (double) y + (i * 2 * fingerlen),
+			    x,
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
+
+			pl_line_r(plotter,
+			    x,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
+			    x + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
+
+			if(i >= fingercnt)
+				break;
+
+			pl_line_r(plotter,
+			    x + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
+			    x + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
+		}
+	}
+
+	return 0;
+}
+
+
+int
+drawfingers_open(int x, int y, int dir, int fingercnt, int matwidth,
+	int matthick)
+{
+	int	i;
+	double	fingerlen;
+
+	fingerlen = (double) matwidth / (fingercnt * 2 + 1);
+
+	if(dir == POINTING_RIGHT) {
+		pl_line_r(plotter,
+		    x,
+		    y,
+		    x + BEFORE_LEN,
+		    y);
+		pl_line_r(plotter,
+		    x,
+		    y + matwidth,
+		    x + BEFORE_LEN,
+		    y + matwidth);
+
+		for(i = 0; i < fingercnt + 1; ++i) {
+
+			pl_line_r(plotter,
+			    x + BEFORE_LEN,
+			    (double) y + (i * 2 * fingerlen),
+			    x + BEFORE_LEN,
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
+
+			if(i >= fingercnt)
+				break;
+
+			pl_line_r(plotter,
+			    x + BEFORE_LEN,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
+			    x + BEFORE_LEN + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
+
+			pl_line_r(plotter,
+			    x + BEFORE_LEN + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
+			    x + BEFORE_LEN + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
+
+			pl_line_r(plotter,
+			    x + BEFORE_LEN + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2,
+			    x + BEFORE_LEN,
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
+		}
+
+	} else { /* POINTING_LEFT */
+
+		pl_line_r(plotter,
+		    x + matthick,
+		    y,
+		    x + matthick + BEFORE_LEN,
+		    y);
+		pl_line_r(plotter,
+		    x + matthick,
+		    y + matwidth,
+		    x + matthick + BEFORE_LEN,
+		    y + matwidth);
+
+		for(i = 0; i < fingercnt + 1; ++i) {
+
+			pl_line_r(plotter,
+			    x + matthick,
+			    (double) y + (i * 2 * fingerlen),
+			    x + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
+
+			if(i >= fingercnt)
+				break;
+
+			pl_line_r(plotter,
+			    x + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
+			    x,
+			    (double) y + (i * 2 * fingerlen) + fingerlen);
+
+			pl_line_r(plotter,
+			    x,
+			    (double) y + (i * 2 * fingerlen) + fingerlen,
+			    x,
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
+
+			pl_line_r(plotter,
+			    x,
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2,
+			    x + matthick,
+			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
+		}
+	}
+
+	return 0;
+}
+
 

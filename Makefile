@@ -10,7 +10,7 @@ clean:
 	rm -f *o; rm -f $(P)
 
 pic: $(P)
-	./$(P) 140 19 6 > out.ps && open out.ps
+	./$(P) box_closed 140 19 5 > out.ps && open out.ps
 #	./$(P) 50 10 5 > out.png && open out.png
 
 
