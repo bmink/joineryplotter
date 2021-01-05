@@ -15,6 +15,8 @@ void usage(const char *);
 #define MODE_BOX_SYMM	0
 #define MODE_BOX_CLOSED	1
 
+#define X_GAP	25
+
 int drawfingers_sym_startwi(int, int, int, int, int, int);
 int drawfingers_sym_startwo(int, int, int, int, int, int);
 int drawfingers_closed(int, int, int, int, int, int);
@@ -332,19 +334,19 @@ drawfingers_closed(int x, int y, int dir, int fingercnt, int matwidth,
 
 		for(i = 0; i < fingercnt + 1; ++i) {
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN,
 			    (double) y + (i * 2 * fingerlen),
 			    x + BEFORE_LEN + matthick,
 			    (double) y + (i * 2 * fingerlen));
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN + matthick,
 			    (double) y + (i * 2 * fingerlen),
 			    x + BEFORE_LEN + matthick,
 			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN + matthick,
 			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + BEFORE_LEN,
@@ -354,7 +356,7 @@ drawfingers_closed(int x, int y, int dir, int fingercnt, int matwidth,
 			 	break;
 			}
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN,
 			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + BEFORE_LEN,
@@ -377,19 +379,19 @@ drawfingers_closed(int x, int y, int dir, int fingercnt, int matwidth,
 
 		for(i = 0; i < fingercnt + 1; ++i) {
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + matthick,
 			    (double) y + (i * 2 * fingerlen),
 			    x,
 			    (double) y + (i * 2 * fingerlen));
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x,
 			    (double) y + (i * 2 * fingerlen),
 			    x,
 			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x,
 			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + matthick,
@@ -398,7 +400,7 @@ drawfingers_closed(int x, int y, int dir, int fingercnt, int matwidth,
 			if(i >= fingercnt)
 				break;
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + matthick,
 			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + matthick,
@@ -433,28 +435,42 @@ drawfingers_open(int x, int y, int dir, int fingercnt, int matwidth,
 
 		for(i = 0; i < fingercnt + 1; ++i) {
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN,
 			    (double) y + (i * 2 * fingerlen),
 			    x + BEFORE_LEN,
 			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
+			/* The X */
+			pl_fline_r(plotter,
+			    x + BEFORE_LEN + X_GAP,
+			    (double) y + (i * 2 * fingerlen) + X_GAP,
+			    x + BEFORE_LEN + matthick - X_GAP,
+			    (double) y + (i * 2 * fingerlen) + fingerlen -
+			    X_GAP);
+			pl_fline_r(plotter,
+			    x + BEFORE_LEN + X_GAP,
+			    (double) y + (i * 2 * fingerlen) + fingerlen -
+			    X_GAP,
+			    x + BEFORE_LEN + matthick - X_GAP,
+			    (double) y + (i * 2 * fingerlen) + X_GAP);
+
 			if(i >= fingercnt)
 				break;
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN,
 			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + BEFORE_LEN + matthick,
 			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN + matthick,
 			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x + BEFORE_LEN + matthick,
 			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + BEFORE_LEN + matthick,
 			    (double) y + (i * 2 * fingerlen) + fingerlen * 2,
 			    x + BEFORE_LEN,
@@ -476,7 +492,7 @@ drawfingers_open(int x, int y, int dir, int fingercnt, int matwidth,
 
 		for(i = 0; i < fingercnt + 1; ++i) {
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + matthick,
 			    (double) y + (i * 2 * fingerlen),
 			    x + matthick,
@@ -485,19 +501,19 @@ drawfingers_open(int x, int y, int dir, int fingercnt, int matwidth,
 			if(i >= fingercnt)
 				break;
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x + matthick,
 			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x,
 			    (double) y + (i * 2 * fingerlen) + fingerlen);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x,
 			    (double) y + (i * 2 * fingerlen) + fingerlen,
 			    x,
 			    (double) y + (i * 2 * fingerlen) + fingerlen * 2);
 
-			pl_line_r(plotter,
+			pl_fline_r(plotter,
 			    x,
 			    (double) y + (i * 2 * fingerlen) + fingerlen * 2,
 			    x + matthick,
